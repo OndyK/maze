@@ -1,13 +1,14 @@
 from Translator import *
 from tkinter import *
+from tkinter import filedialog
 from path_finder import *
 
 class Maze:
     def __init__(self):  
         self.canvas = None
         self.window = None 
-        self.width = 500
-        self.height = 600
+        self.width = 450
+        self.height = 450
         self.robot = None
         self.memory = []
         self.way = []
@@ -19,6 +20,8 @@ class Maze:
         self.error_txt = None
         self.walked = []
         self.lvl = None
+        self.bcanvas_width = 150
+        self.bcanvas_height = 150
         self.create_window()
 
     def create_window(self):
@@ -68,12 +71,7 @@ class Maze:
             else:
                 y = int(self.input_y.get())
             if int(self.input_x.get()) >= 0 and int(self.input_y.get()) >= 0:
-                if self.lvl == Translator().return_maze(r"LVL_1.txt"):
-                        self.robot = self.canvas.create_oval((40*x)+200, (40*y)+120, 40*(x+1)+200, 40*(y+1)+120, fill = "blue")
-                elif self.lvl == Translator().return_maze(r"LVL_2.txt"):
-                        self.robot = self.canvas.create_oval((40*x)+130, (40*y)+80, 40*(x+1)+130, 40*(y+1)+80, fill ="blue")
-                else:
-                        self.robot = self.canvas.create_oval((40*x)+50, (40*y)+30, 40*(x+1)+50, 40*(y+1)+30, fill = "blue")
+                self.robot = self.canvas.create_oval(x*(self.width/self.width_lvl), y*(self.height/self.height_lvl),x*(self.width/self.width_lvl)+(self.width/self.width_lvl), y*(self.height/self.height_lvl)+(self.height/self.height_lvl), fill = "blue")
             else:
                  self.error("Input numbers greater than zero")
         except ValueError:
@@ -95,138 +93,153 @@ class Maze:
         self.Lvl_2.place(x = 225, y = 110, width = 100, height = 50)
         self.Lvl_3 = Button(self.window, text = "Level 3", command = self.preview_level_3)
         self.Lvl_3.place(x = 225, y = 190, width = 100, height = 50)
+        self.own_lvl = Button(self.window, text = "Own level", command = self.own_level_preview)
+        self.own_lvl.place(x = 225, y = 270, width = 100, height = 50)
         self.window.mainloop()
-        
+    
+    def own_level_preview(self):
+        self.disable_edit()
+        self.Lvl_1.destroy()
+        self.Lvl_2.destroy()
+        self.Lvl_3.destroy()
+        self.own_lvl.destroy()
+        level_path = filedialog.askopenfilename(title = "Open a text file",filetypes =(("text   files","*.txt"), ("all   files","*.*")))
+        self.lvl = Translator().return_maze(level_path)
+        self.bcanvas = Canvas(self.window, height = 160, width = 160)
+        self.bcanvas.place(x = 280, y = 150)
+        width_list = []
+        for i in self.lvl[0]:
+            if i == "0" or i == "1" or i == "2":
+                width_list.append(i)
+        exits = []
+        for y in range(len(self.lvl)):
+            x = 0
+            for x in range(len(self.lvl[y])):
+                if self.lvl[y][x] == "2":
+                    exits.append(1)
+        self.height_lvl = len(self.lvl)
+        self.width_lvl = len(width_list)
+        self.preview_txt = Label(self.window, text = "MAZE 1", font = "Helvetica 25 bold", fg = "blue")
+        self.preview_txt.place(x = 175, y = 10, width = 200, height = 100)
+        self.info = Label(self.window, text = "This is level 1 Maze\n parameters:\n width: {fwidth}\n height: {fheight}\n number of exits: {fexits}".format(fwidth = self.width_lvl, fheight = self.height_lvl, fexits = len(exits)), font = "Helvetica 16")
+        self.info.place(x = 10, y = 100, width = 200, height = 200)
+        self.select_button = Button(self.window, text = "Select", command = self.draw_level) 
+        self.select_button.place(x = 70, y = 310, width = 80, height = 40)
+        for y in range(len(self.lvl)):
+            x = 0
+            for x in range(len(self.lvl[y])):
+                if self.lvl[y][x] == "0":
+                    self.bcanvas.create_rectangle(x*(self.bcanvas_width/self.width_lvl)+10, y*(self.bcanvas_height/self.height_lvl)+10,x*(self.bcanvas_width/self.width_lvl)+10 + (self.bcanvas_width/self.width_lvl),  y*(self.bcanvas_height/self.height_lvl)+10 + (self.bcanvas_height/self.height_lvl))
+                elif self.lvl[y][x] == "1":
+                     self.bcanvas.create_rectangle(x*(self.bcanvas_width/self.width_lvl)+10, y*(self.bcanvas_height/self.height_lvl)+10,x*(self.bcanvas_width/self.width_lvl)+10 + (self.bcanvas_width/self.width_lvl),  y*(self.bcanvas_height/self.height_lvl)+10 + (self.bcanvas_height/self.height_lvl), fill = "black")
+                elif self.lvl[y][x] == "2":
+                     self.bcanvas.create_rectangle(x*(self.bcanvas_width/self.width_lvl)+10, y*(self.bcanvas_height/self.height_lvl)+10,x*(self.bcanvas_width/self.width_lvl)+10 + (self.bcanvas_width/self.width_lvl),  y*(self.bcanvas_height/self.height_lvl)+10 + (self.bcanvas_height/self.height_lvl), fill = "red")
+    
+    def draw_level(self):
+        self.enable_edit()
+        self.destroy_texts()
+        for y in range(len(self.lvl)):
+            x = 0
+            for x in range(len(self.lvl[y])):
+                if self.lvl[y][x] == "0":
+                    self.canvas.create_rectangle(x*(self.width/self.width_lvl), y*(self.height/self.height_lvl),x*(self.width/self.width_lvl) + (self.width/self.width_lvl),  y*(self.height/self.height_lvl) + (self.height/self.height_lvl))
+                elif self.lvl[y][x] == "1":
+                     self.canvas.create_rectangle(x*(self.width/self.width_lvl), y*(self.height/self.height_lvl),x*(self.width/self.width_lvl) + (self.width/self.width_lvl),  y*(self.height/self.height_lvl) + (self.height/self.height_lvl), fill = "black")
+                elif self.lvl[y][x] == "2":
+                     self.canvas.create_rectangle(x*(self.width/self.width_lvl), y*(self.height/self.height_lvl),x*(self.width/self.width_lvl) + (self.width/self.width_lvl),  y*(self.height/self.height_lvl) + (self.height/self.height_lvl), fill = "red")
+    
     def preview_level_1(self):
         self.disable_edit()
         self.Lvl_1.destroy()
         self.Lvl_2.destroy()
         self.Lvl_3.destroy()
+        self.own_lvl.destroy()
+        self.bcanvas = Canvas(self.window, height = 160, width = 160)
+        self.bcanvas.place(x = 280, y = 150)
         self.lvl = Translator().return_maze(r"LVL_1.txt")
         self.preview_txt = Label(self.window, text = "MAZE 1", font = "Helvetica 25 bold", fg = "blue")
         self.preview_txt.place(x = 175, y = 10, width = 200, height = 100)
         self.info = Label(self.window, text = "This is level 1 Maze\n parameters:\n width: 4\n height: 4\n number of exits: 1", font = "Helvetica 16")
         self.info.place(x = 10, y = 100, width = 200, height = 200)
-        self.select_button = Button(self.window, text = "Select", command = self.draw_level_1) 
+        self.select_button = Button(self.window, text = "Select", command = self.draw_level) 
         self.select_button.place(x = 70, y = 310, width = 80, height = 40)
+        width_list = []
+        for i in self.lvl[0]:
+            if i == "0" or i == "1" or i == "2":
+                width_list.append(i)
+        self.height_lvl = len(self.lvl)
+        self.width_lvl = len(width_list)
         for y in range(len(self.lvl)):
             x = 0
-            line = self.lvl[y]
-            for num in line:
-                if num == "0":
-                    self.canvas.create_rectangle((20*x)+300, (20*y)+180, 20*(x+1)+300, 20*(y+1)+180)
-                    x += 1
-                if num == "1":
-                    self.canvas.create_rectangle((20*x)+300, (20*y)+180, 20*(x+1)+300, 20*(y+1)+180, fill = "black")
-                    x += 1
-                if num == "2":
-                    self.canvas.create_rectangle((20*x)+300, (20*y)+180, 20*(x+1)+300, 20*(y+1)+180, fill = "red")
-                    x += 1
-    
-    def draw_level_1(self):
-        self.enable_edit()
-        self.destroy_texts()
-        for y in range(len(self.lvl)):
-            x = 0
-            line = self.lvl[y]
-            for num in line:
-                if num == "0":
-                    self.canvas.create_rectangle((40*x)+200, (40*y)+120, 40*(x+1)+200, 40*(y+1)+120)
-                    x += 1
-                if num == "1":
-                    self.canvas.create_rectangle((40*x)+200, (40*y)+120, 40*(x+1)+200, 40*(y+1)+120, fill = "black")
-                    x += 1
-                if num == "2":
-                    self.canvas.create_rectangle((40*x)+200, (40*y)+120, 40*(x+1)+200, 40*(y+1)+120, fill = "red")
-                    x += 1
-    
+            for x in range(len(self.lvl[y])):
+                if self.lvl[y][x] == "0":
+                    self.bcanvas.create_rectangle(x*(self.bcanvas_width/self.width_lvl)+10, y*(self.bcanvas_height/self.height_lvl)+10,x*(self.bcanvas_width/self.width_lvl)+10 + (self.bcanvas_width/self.width_lvl),  y*(self.bcanvas_height/self.height_lvl)+10 + (self.bcanvas_height/self.height_lvl))
+                elif self.lvl[y][x] == "1":
+                     self.bcanvas.create_rectangle(x*(self.bcanvas_width/self.width_lvl)+10, y*(self.bcanvas_height/self.height_lvl)+10,x*(self.bcanvas_width/self.width_lvl)+10 + (self.bcanvas_width/self.width_lvl),  y*(self.bcanvas_height/self.height_lvl)+10 + (self.bcanvas_height/self.height_lvl), fill = "black")
+                elif self.lvl[y][x] == "2":
+                     self.bcanvas.create_rectangle(x*(self.bcanvas_width/self.width_lvl)+10, y*(self.bcanvas_height/self.height_lvl)+10,x*(self.bcanvas_width/self.width_lvl)+10 + (self.bcanvas_width/self.width_lvl),  y*(self.bcanvas_height/self.height_lvl)+10 + (self.bcanvas_height/self.height_lvl), fill = "red")
+
     def preview_level_2(self):
         self.Lvl_1.destroy()
         self.Lvl_2.destroy()
         self.Lvl_3.destroy()
+        self.own_lvl.destroy()
         self.disable_edit()
+        self.bcanvas = Canvas(self.window, height = 160, width = 160)
+        self.bcanvas.place(x = 280, y = 150)
         self.lvl = Translator().return_maze(r"LVL_2.txt")
         self.preview_txt = Label(self.window, text = "MAZE 2", font = "Helvetica 25 bold", fg = "blue")
         self.preview_txt.place(x = 175, y = 10, width = 200, height = 100)
         self.info = Label(self.window, text = "This is level 2 Maze\n parameters:\n width: 6\n height: 6\n number of exits: 1", font = "Helvetica 16")
         self.info.place(x = 10, y = 100, width = 200, height = 200)
-        self.select_button = Button(self.window, text = "Select", command = self.draw_level_2) 
+        self.select_button = Button(self.window, text = "Select", command = self.draw_level) 
         self.select_button.place(x = 70, y = 310, width = 80, height = 40)
+        width_list = []
+        for i in self.lvl[0]:
+            if i == "0" or i == "1" or i == "2":
+                width_list.append(i)
+        self.height_lvl = len(self.lvl)
+        self.width_lvl = len(width_list)
         for y in range(len(self.lvl)):
-                x = 0
-                line = self.lvl[y]
-                for num in line:
-                        if num == "0":
-                            self.canvas.create_rectangle((20*x)+300, (20*y)+180, 20*(x+1)+300, 20*(y+1)+180)
-                            x += 1
-                        if num == "1":
-                            self.canvas.create_rectangle((20*x)+300, (20*y)+180, 20*(x+1)+300, 20*(y+1)+180, fill = "black")
-                            x += 1
-                        if num == "2":
-                            self.canvas.create_rectangle((20*x)+300, (20*y)+180, 20*(x+1)+300, 20*(y+1)+180, fill = "red")
-                            x += 1
-        
-    def draw_level_2(self):
-        self.destroy_texts()
-        self.enable_edit()
-        for y in range(len(self.lvl)):
-                x = 0
-                line = self.lvl[y]
-                for num in line:
-                    if num == "0":
-                        self.canvas.create_rectangle((40*x)+130, (40*y)+80, 40*(x+1)+130, 40*(y+1)+80)
-                        x += 1
-                    if num == "1":
-                        self.canvas.create_rectangle((40*x)+130, (40*y)+80, 40*(x+1)+130, 40*(y+1)+80, fill = "black")
-                        x += 1
-                    if num == "2":
-                        self.canvas.create_rectangle((40*x)+130, (40*y)+80, 40*(x+1)+130, 40*(y+1)+80,fill = "red")
-                        x += 1
+            x = 0
+            for x in range(len(self.lvl[y])):
+                if self.lvl[y][x] == "0":
+                    self.bcanvas.create_rectangle(x*(self.bcanvas_width/self.width_lvl)+10, y*(self.bcanvas_height/self.height_lvl)+10,x*(self.bcanvas_width/self.width_lvl)+10 + (self.bcanvas_width/self.width_lvl),  y*(self.bcanvas_height/self.height_lvl)+10 + (self.bcanvas_height/self.height_lvl))
+                elif self.lvl[y][x] == "1":
+                     self.bcanvas.create_rectangle(x*(self.bcanvas_width/self.width_lvl)+10, y*(self.bcanvas_height/self.height_lvl)+10,x*(self.bcanvas_width/self.width_lvl)+10 + (self.bcanvas_width/self.width_lvl),  y*(self.bcanvas_height/self.height_lvl)+10 + (self.bcanvas_height/self.height_lvl), fill = "black")
+                elif self.lvl[y][x] == "2":
+                     self.bcanvas.create_rectangle(x*(self.bcanvas_width/self.width_lvl)+10, y*(self.bcanvas_height/self.height_lvl)+10,x*(self.bcanvas_width/self.width_lvl)+10 + (self.bcanvas_width/self.width_lvl),  y*(self.bcanvas_height/self.height_lvl)+10 + (self.bcanvas_height/self.height_lvl), fill = "red")
     
     def preview_level_3(self):
         self.Lvl_1.destroy()
         self.Lvl_2.destroy()
         self.Lvl_3.destroy()
+        self.own_lvl.destroy()
         self.disable_edit()
+        self.bcanvas = Canvas(self.window, height = 160, width = 160)
+        self.bcanvas.place(x = 280, y = 150)
         self.lvl = Translator().return_maze(r"LVL_3.txt")
         self.preview_txt = Label(self.window, text = "MAZE 3", font = "Helvetica 25 bold", fg = "blue")
         self.preview_txt.place(x = 175, y = 10, width = 200, height = 100)
         self.info = Label(self.window, text = "This is level 3 Maze\n parameters:\n width: 10\n height: 10\n number of exits: 1", font = "Helvetica 16")
         self.info.place(x = 10, y = 100, width = 200, height = 200)
-        self.select_button = Button(self.window, text = "Select", command = self.draw_level_3) 
+        self.select_button = Button(self.window, text = "Select", command = self.draw_level) 
         self.select_button.place(x = 70, y = 310, width = 80, height = 40)
+        width_list = []
+        for i in self.lvl[0]:
+            if i == "0" or i == "1" or i == "2":
+                width_list.append(i)
+        self.height_lvl = len(self.lvl)
+        self.width_lvl = len(width_list)
         for y in range(len(self.lvl)):
-                x = 0
-                line = self.lvl[y]
-                for num in line:
-                    if num == "0":
-                        self.canvas.create_rectangle((20*x)+250, (20*y)+130, 20*(x+1)+250, 20*(y+1)+130)
-                        x += 1
-                    if num == "1":
-                        self.canvas.create_rectangle((20*x)+250, (20*y)+130, 20*(x+1)+250, 20*(y+1)+130, fill = "black")
-                        x += 1
-                    if num == "2":
-                        self.canvas.create_rectangle((20*x)+250, (20*y)+130, 20*(x+1)+250, 20*(y+1)+130,fill = "red")
-                        x += 1
-
-
-    def draw_level_3(self):
-        self.enable_edit()
-        self.destroy_texts()
-        self.lvl = Translator().return_maze(r"C:\Users\Administrator\Desktop\pogromovani\VSCode\maze_repository\LVL_3.txt")
-        for y in range(len(self.lvl)):
-                x = 0
-                line = self.lvl[y]
-                for num in line:
-                    if num == "0":
-                        self.canvas.create_rectangle((40*x)+50, (40*y)+30, 40*(x+1)+50, 40*(y+1)+30)
-                        x += 1
-                    if num == "1":
-                        self.canvas.create_rectangle((40*x)+50, (40*y)+30, 40*(x+1)+50, 40*(y+1)+30, fill = "black")
-                        x += 1
-                    if num == "2":
-                        self.canvas.create_rectangle((40*x)+50, (40*y)+30, 40*(x+1)+50, 40*(y+1)+30,fill = "red")
-                        x += 1
+            x = 0
+            for x in range(len(self.lvl[y])):
+                if self.lvl[y][x] == "0":
+                    self.bcanvas.create_rectangle(x*(self.bcanvas_width/self.width_lvl)+10, y*(self.bcanvas_height/self.height_lvl)+10,x*(self.bcanvas_width/self.width_lvl)+10 + (self.bcanvas_width/self.width_lvl),  y*(self.bcanvas_height/self.height_lvl)+10 + (self.bcanvas_height/self.height_lvl))
+                elif self.lvl[y][x] == "1":
+                     self.bcanvas.create_rectangle(x*(self.bcanvas_width/self.width_lvl)+10, y*(self.bcanvas_height/self.height_lvl)+10,x*(self.bcanvas_width/self.width_lvl)+10 + (self.bcanvas_width/self.width_lvl),  y*(self.bcanvas_height/self.height_lvl)+10 + (self.bcanvas_height/self.height_lvl), fill = "black")
+                elif self.lvl[y][x] == "2":
+                     self.bcanvas.create_rectangle(x*(self.bcanvas_width/self.width_lvl)+10, y*(self.bcanvas_height/self.height_lvl)+10,x*(self.bcanvas_width/self.width_lvl)+10 + (self.bcanvas_width/self.width_lvl),  y*(self.bcanvas_height/self.height_lvl)+10 + (self.bcanvas_height/self.height_lvl), fill = "red")
                 
     def find_end(self):
         self.root = Node([int(self.input_x.get())-1,int(self.input_y.get())-1])
@@ -243,8 +256,8 @@ class Maze:
             
     def walk(self):
             try:
-                x = (self.place[0]-self.previous[0])*40
-                y = (self.place[1]-self.previous[1])*40
+                x = (self.place[0]-self.previous[0])*(self.width/self.width_lvl)
+                y = (self.place[1]-self.previous[1])*(self.height/self.height_lvl)
                 self.canvas.move(self.robot, x, y)
                 self.previous = self.place
                 self.place = self.way.pop()
@@ -280,7 +293,7 @@ class Maze:
                         else:
                             self.error("Do not place robot on wall")
                     else:
-                        self.error("Don' place robot on end")
+                        self.error("Don't place robot on end")
             else:
                 self.error("Put both coordinates")
             
@@ -327,6 +340,7 @@ class Maze:
     
     def destroy_texts(self):
         self.canvas.delete("all")
+        self.bcanvas.destroy()
         self.preview_txt.destroy()
         self.info.destroy()
         self.select_button.destroy()
