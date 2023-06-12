@@ -1,0 +1,14 @@
+#REPOSITORY INFO
+## TRANSLAROR
+The translator reads the given level document and translate to workable form for future interractions
+## PATH FINDER
+The path finder finds the path depending on given level
+It creates a quad tree and then it search it into depth, returning the way to the end
+### MAZE DRAW
+The maze draw creates the window, GUI
+After given level, it creates a preview for the level, showing parameters and smaller version of the maze
+After selecting the maze, it creates normal sized maze, robot based on x and y position
+Finally, it starts program, graphically showing the way to the end
+After that, it asks you, if you want to play again
+
+#HAVE FUN
