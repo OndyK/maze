@@ -344,5 +344,3 @@ class Maze:
         self.enter_button["state"] = NORMAL
 
 Maze()
-
-print("hello")
